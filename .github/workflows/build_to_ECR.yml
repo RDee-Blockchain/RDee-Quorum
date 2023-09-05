@@ -7,8 +7,9 @@ on:
       - '**.md'
       - 'mkdocs.yml'
       - '.gitignore'
-    branches:
-      - master
+      - '.github'
+#    branches:
+#      - master
 env:
   GO_VERSION: 1.19
   GOPATH: ${{ github.workspace }}/go
