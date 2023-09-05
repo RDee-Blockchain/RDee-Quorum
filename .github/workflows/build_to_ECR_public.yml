@@ -1,4 +1,4 @@
-name: TEST 
+name: Build to ECR public
 on:
   workflow_dispatch:
 
