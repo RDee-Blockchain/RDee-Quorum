@@ -9,10 +9,10 @@ on:
       - '.gitignore'
     # branches:
     #   - master
-env:
-  GO_VERSION: 1.19
-  GOPATH: ${{ github.workspace }}/go
-  WORKING_DIR: ${{ github.workspace }}/go/src/github.com/ethereum/go-ethereum
+# env:
+#   GO_VERSION: 1.19
+#   GOPATH: ${{ github.workspace }}/go
+#   WORKING_DIR: ${{ github.workspace }}/go/src/github.com/ethereum/go-ethereum
 jobs:
   # build:
   #   name: 'Run tests and build on ${{ matrix.os }}'
@@ -339,5 +339,5 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1  
       - name: Push Docker image to ECR
         run: |
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.name }}:${{ env.tag }}
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.name }}:latest
+          docker push ${{ env.ECR_REGISTRY }}:${{ env.tag }}
+          docker push ${{ env.ECR_REGISTRY }}:latest
