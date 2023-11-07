@@ -1,0 +1,55 @@
+name: Build to ECR public
+on:
+  workflow_dispatch:
+  push:
+    paths-ignore:
+        - 'docs/**'
+        - '**.md'
+        - 'mkdocs.yml'
+        - '.gitignore'
+        - '.github'
+    branches:
+       - feat/consensus-modification
+
+jobs:
+
+  publish-docker:
+    name: Publish Docker Image
+    # needs:
+    #   - build
+    #   - acceptance-tests-basic
+    #   - acceptance-tests-extra
+    runs-on: ubuntu-20.04
+    env:
+      name: ${GITHUB_REPOSITORY#*/}"
+      tag: ${GITHUB_SHA}
+      ECR_REGISTRY: ${{ secrets.MOD_ECR_REGISTRY }}
+      AWS_REGION: ${{ vars.AWS_PUBLIC_REGION }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v3
+      - name: Build docker image
+        run: |
+          docker build -t ${{ env.ECR_REGISTRY }}:${{ env.tag }} .
+          docker tag ${{ env.ECR_REGISTRY }}:${{ env.tag }} ${{ env.ECR_REGISTRY }}:latest
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR Public
+        id: login-ecr-public
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: 'true'
+          registry-type: public
+
+      - name: Push docker image to Amazon ECR Public
+        run: |
+          docker push ${{ env.ECR_REGISTRY }}:${{ env.tag }} 
+          docker push ${{ env.ECR_REGISTRY }}:latest          
