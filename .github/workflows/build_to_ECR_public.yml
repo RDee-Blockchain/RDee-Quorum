@@ -3,9 +3,6 @@ on:
   workflow_dispatch:
   push:
     paths-ignore:
-          - 'docs/**'
-          - '**.md'
-          - 'mkdocs.yml'
           - '.gitignore'
           - '.github/**'
     branches:
@@ -14,10 +11,6 @@ jobs:
 
   publish-docker:
     name: Publish Docker Image
-    # needs:
-    #   - build
-    #   - acceptance-tests-basic
-    #   - acceptance-tests-extra
     runs-on: ubuntu-20.04
     env:
       name: ${GITHUB_REPOSITORY#*/}"
