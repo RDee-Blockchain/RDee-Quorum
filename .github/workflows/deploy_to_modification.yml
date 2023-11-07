@@ -1,4 +1,4 @@
-name: Build to ECR public
+name: Build to ECR-modification public 
 on:
   workflow_dispatch:
   push:
