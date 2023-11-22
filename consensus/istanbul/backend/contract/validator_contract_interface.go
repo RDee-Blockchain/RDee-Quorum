@@ -4,6 +4,7 @@
 package contract
 
 import (
+	"errors"
 	"math/big"
 	"strings"
 
@@ -17,6 +18,7 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var (
+	_ = errors.New
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
@@ -24,12 +26,17 @@ var (
 	_ = common.Big1
 	_ = types.BloomLookup
 	_ = event.NewSubscription
+	_ = abi.ConvertType
 )
 
-// ValidatorContractInterfaceABI is the input ABI used to generate the binding from.
-const ValidatorContractInterfaceABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"getValidators\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]"
+// ValidatorContractInterfaceMetaData contains all meta data concerning the ValidatorContractInterface contract.
+var ValidatorContractInterfaceMetaData = &bind.MetaData{
+	ABI: "[{\"constant\":true,\"inputs\":[],\"name\":\"getStakingValidators\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getValidators\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]",
+}
 
-var ValidatorContractInterfaceParsedABI, _ = abi.JSON(strings.NewReader(ValidatorContractInterfaceABI))
+// ValidatorContractInterfaceABI is the input ABI used to generate the binding from.
+// Deprecated: Use ValidatorContractInterfaceMetaData.ABI instead.
+var ValidatorContractInterfaceABI = ValidatorContractInterfaceMetaData.ABI
 
 // ValidatorContractInterface is an auto generated Go binding around an Ethereum contract.
 type ValidatorContractInterface struct {
@@ -128,11 +135,11 @@ func NewValidatorContractInterfaceFilterer(address common.Address, filterer bind
 
 // bindValidatorContractInterface binds a generic wrapper to an already deployed contract.
 func bindValidatorContractInterface(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := abi.JSON(strings.NewReader(ValidatorContractInterfaceABI))
+	parsed, err := ValidatorContractInterfaceMetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
+	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
 }
 
 // Call invokes the (constant) contract method with params as input values and
@@ -171,6 +178,37 @@ func (_ValidatorContractInterface *ValidatorContractInterfaceTransactorRaw) Tran
 // Transact invokes the (paid) contract method with params as input values.
 func (_ValidatorContractInterface *ValidatorContractInterfaceTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _ValidatorContractInterface.Contract.contract.Transact(opts, method, params...)
+}
+
+// GetStakingValidators is a free data retrieval call binding the contract method 0x462c73d5.
+//
+// Solidity: function getStakingValidators() view returns(address[])
+func (_ValidatorContractInterface *ValidatorContractInterfaceCaller) GetStakingValidators(opts *bind.CallOpts) ([]common.Address, error) {
+	var out []interface{}
+	err := _ValidatorContractInterface.contract.Call(opts, &out, "getStakingValidators")
+
+	if err != nil {
+		return *new([]common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]common.Address)).(*[]common.Address)
+
+	return out0, err
+
+}
+
+// GetStakingValidators is a free data retrieval call binding the contract method 0x462c73d5.
+//
+// Solidity: function getStakingValidators() view returns(address[])
+func (_ValidatorContractInterface *ValidatorContractInterfaceSession) GetStakingValidators() ([]common.Address, error) {
+	return _ValidatorContractInterface.Contract.GetStakingValidators(&_ValidatorContractInterface.CallOpts)
+}
+
+// GetStakingValidators is a free data retrieval call binding the contract method 0x462c73d5.
+//
+// Solidity: function getStakingValidators() view returns(address[])
+func (_ValidatorContractInterface *ValidatorContractInterfaceCallerSession) GetStakingValidators() ([]common.Address, error) {
+	return _ValidatorContractInterface.Contract.GetStakingValidators(&_ValidatorContractInterface.CallOpts)
 }
 
 // GetValidators is a free data retrieval call binding the contract method 0xb7ab4db5.
