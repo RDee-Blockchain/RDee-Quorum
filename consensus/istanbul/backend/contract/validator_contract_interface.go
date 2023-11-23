@@ -4,7 +4,6 @@
 package contract
 
 import (
-	"errors"
 	"math/big"
 	"strings"
 
