@@ -9,7 +9,7 @@ on:
         - '.gitignore'
         - '.github'
     branches:
-       - v23.4.0
+       - latest
 
 jobs:
 
