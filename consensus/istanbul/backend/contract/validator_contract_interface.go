@@ -18,7 +18,6 @@ import (
 
 // Reference imports to suppress errors if they are not otherwise used.
 var (
-	_ = errors.New
 	_ = big.NewInt
 	_ = strings.NewReader
 	_ = ethereum.NotFound
@@ -26,17 +25,12 @@ var (
 	_ = common.Big1
 	_ = types.BloomLookup
 	_ = event.NewSubscription
-	_ = abi.ConvertType
 )
 
-// ValidatorContractInterfaceMetaData contains all meta data concerning the ValidatorContractInterface contract.
-var ValidatorContractInterfaceMetaData = &bind.MetaData{
-	ABI: "[{\"constant\":true,\"inputs\":[],\"name\":\"getStakingValidators\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getValidators\",\"outputs\":[{\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]",
-}
-
 // ValidatorContractInterfaceABI is the input ABI used to generate the binding from.
-// Deprecated: Use ValidatorContractInterfaceMetaData.ABI instead.
-var ValidatorContractInterfaceABI = ValidatorContractInterfaceMetaData.ABI
+const ValidatorContractInterfaceABI = "[{\"constant\":true,\"inputs\":[],\"name\":\"getStakingValidators\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getValidators\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]]"
+
+var ValidatorContractInterfaceParsedABI, _ = abi.JSON(strings.NewReader(ValidatorContractInterfaceABI))
 
 // ValidatorContractInterface is an auto generated Go binding around an Ethereum contract.
 type ValidatorContractInterface struct {
@@ -135,11 +129,11 @@ func NewValidatorContractInterfaceFilterer(address common.Address, filterer bind
 
 // bindValidatorContractInterface binds a generic wrapper to an already deployed contract.
 func bindValidatorContractInterface(address common.Address, caller bind.ContractCaller, transactor bind.ContractTransactor, filterer bind.ContractFilterer) (*bind.BoundContract, error) {
-	parsed, err := ValidatorContractInterfaceMetaData.GetAbi()
+	parsed, err := abi.JSON(strings.NewReader(ValidatorContractInterfaceABI))
 	if err != nil {
 		return nil, err
 	}
-	return bind.NewBoundContract(address, *parsed, caller, transactor, filterer), nil
+	return bind.NewBoundContract(address, parsed, caller, transactor, filterer), nil
 }
 
 // Call invokes the (constant) contract method with params as input values and
