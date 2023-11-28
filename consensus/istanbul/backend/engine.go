@@ -390,7 +390,7 @@ func (sb *Backend) snapshot(chain consensus.ChainHeaderReader, number uint64, ha
 				stakingValidators, err = validatorContractCaller.GetStakingValidators(&opts)
 				log.Trace("BFT: Initialising snap with contract staking validators", "address", validatorContract, "staking validators", stakingValidators)
 				if err != nil {
-					log.Error("BFT: invalid smart contract in genesis alloc", "err", err)
+					log.Error("BFT: invalid smart contract in genesis alloc for staking validators", "err", err)
 					return nil, err
 				}
 			} else {
