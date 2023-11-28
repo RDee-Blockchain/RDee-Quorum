@@ -272,7 +272,7 @@ func (c Config) GetStakingValidatorsAt(blockNumber *big.Int) []common.Address {
 		return c.StakingValidators
 	}
 
-	return []common.Address{}
+	return c.StakingValidators
 }
 
 func (c Config) Get2FPlus1Enabled(blockNumber *big.Int) bool {
