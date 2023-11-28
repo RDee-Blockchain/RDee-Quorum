@@ -133,11 +133,10 @@ func (c *core) startNewRound(round *big.Int) {
 	}
 	
 	logger.Info("QBFT: initialize new round")
+
 	var stakingValidators []common.Address
-	
-	stakingValidators = c.config.GetStakingValidatorsAt(c.current.Sequence())
-	logger.Info("QBFT: staking validators", "stakingValidators", stakingValidators)
-	logger.Info("QBFT: round", "rount", round)
+	stakingValidators = c.config.GetStakingValidatorsAt(lastProposal.Number())
+	logger.Info("QBFT: Staking Validators", "stakingValidators", stakingValidators)
 
 	if c.current == nil {
 		logger.Debug("QBFT: start at the initial round")

@@ -342,7 +342,7 @@ func (sb *Backend) getStakingValidators(number uint64, hash common.Hash) istanbu
 	if err != nil {
 		return validator.NewSet(nil, sb.config.ProposerPolicy)
 	}
-	return snap.StakeValSet
+	return snap.StakingValSet
 }
 
 func (sb *Backend) LastProposal() (istanbul.Proposal, common.Address) {
