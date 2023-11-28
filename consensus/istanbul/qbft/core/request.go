@@ -37,7 +37,7 @@ func (c *core) handleRequest(request *Request) error {
 	logger.Info("QBFT: handle block proposal request")
 	var stakingValidators []common.Address
 	
-	stakingValidators = c.config.GetStakingValidatorsAt(c.current.sequence)
+	stakingValidators = c.config.GetStakingValidatorsAt(c.current.Sequence())
 	logger.Info("QBFT: STAKING VALIDATORS HERE", "stakingValidators", stakingValidators)
 
 	if err := c.checkRequestMsg(request); err != nil {
