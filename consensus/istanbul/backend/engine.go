@@ -412,6 +412,7 @@ func (sb *Backend) snapshot(chain consensus.ChainHeaderReader, number uint64, ha
 				}
 			}
 
+			log.Info("BFT: Staking Validators before snapshot", "staking validators", stakingValidators)
 			snap = newSnapshot(sb.config.GetConfig(new(big.Int).SetUint64(number)).Epoch, 0, genesis.Hash(), validator.NewSet(validators, sb.config.ProposerPolicy), validator.NewSet(stakingValidators, sb.config.ProposerPolicy))
 			if err := sb.storeSnap(snap); err != nil {
 				return nil, err
