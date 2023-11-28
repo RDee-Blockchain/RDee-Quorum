@@ -142,6 +142,25 @@ func (api *API) GetValidators(number *rpc.BlockNumber) ([]common.Address, error)
 	return snap.validators(), nil
 }
 
+func (api *API) GetStakingValidators(number *rpc.BlockNumber) ([]common.Address, error) {
+	// Retrieve the requested block number (or current if none requested)
+	var header *types.Header
+	if number == nil || *number == rpc.LatestBlockNumber {
+		header = api.chain.CurrentHeader()
+	} else {
+		header = api.chain.GetHeaderByNumber(uint64(number.Int64()))
+	}
+	// Ensure we have an actually valid block and return the validators from its snapshot
+	if header == nil {
+		return nil, istanbulcommon.ErrUnknownBlock
+	}
+	snap, err := api.backend.snapshot(api.chain, header.Number.Uint64(), header.Hash(), nil)
+	if err != nil {
+		return nil, err
+	}
+	return snap.stakingValidators(), nil
+}
+
 // GetValidatorsAtHash retrieves the state snapshot at a given block.
 func (api *API) GetValidatorsAtHash(hash common.Hash) ([]common.Address, error) {
 	header := api.chain.GetHeaderByHash(hash)

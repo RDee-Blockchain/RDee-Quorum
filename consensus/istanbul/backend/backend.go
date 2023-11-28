@@ -150,6 +150,10 @@ func (sb *Backend) Validators(proposal istanbul.Proposal) istanbul.ValidatorSet 
 	return sb.getValidators(proposal.Number().Uint64(), proposal.Hash())
 }
 
+func (sb *Backend) StakingValidators(proposal istanbul.Proposal) istanbul.ValidatorSet {
+	return sb.getStakingValidators(proposal.Number().Uint64(), proposal.Hash())
+}
+
 // Broadcast implements istanbul.Backend.Broadcast
 func (sb *Backend) Broadcast(valSet istanbul.ValidatorSet, code uint64, payload []byte) error {
 	// send to others
@@ -331,6 +335,14 @@ func (sb *Backend) getValidators(number uint64, hash common.Hash) istanbul.Valid
 		return validator.NewSet(nil, sb.config.ProposerPolicy)
 	}
 	return snap.ValSet
+}
+
+func (sb *Backend) getStakingValidators(number uint64, hash common.Hash) istanbul.ValidatorSet {
+	snap, err := sb.snapshot(sb.chain, number, hash, nil)
+	if err != nil {
+		return validator.NewSet(nil, sb.config.ProposerPolicy)
+	}
+	return snap.StakeValSet
 }
 
 func (sb *Backend) LastProposal() (istanbul.Proposal, common.Address) {

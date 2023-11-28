@@ -32,6 +32,9 @@ type Backend interface {
 	// Validators returns the validator set
 	Validators(proposal Proposal) ValidatorSet
 
+	// Validators returns the validator set
+	StakingValidators(proposal Proposal) ValidatorSet
+
 	// EventMux returns the event mux in backend
 	EventMux() *event.TypeMux
 

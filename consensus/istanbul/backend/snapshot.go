@@ -55,17 +55,19 @@ type Snapshot struct {
 	Votes  []*Vote                  // List of votes cast in chronological order
 	Tally  map[common.Address]Tally // Current vote tally to avoid recalculating
 	ValSet istanbul.ValidatorSet    // Set of authorized validators at this moment
+	StakeValSet istanbul.ValidatorSet    // Set of authorized staking validators at this moment
 }
 
 // newSnapshot create a new snapshot with the specified startup parameters. This
 // method does not initialize the set of recent validators, so only ever use if for
 // the genesis block.
-func newSnapshot(epoch uint64, number uint64, hash common.Hash, valSet istanbul.ValidatorSet) *Snapshot {
+func newSnapshot(epoch uint64, number uint64, hash common.Hash, valSet istanbul.ValidatorSet, stakeValSet istanbul.ValidatorSet) *Snapshot {
 	snap := &Snapshot{
 		Epoch:  epoch,
 		Number: number,
 		Hash:   hash,
 		ValSet: valSet,
+		StakeValSet: stakeValSet,
 		Tally:  make(map[common.Address]Tally),
 	}
 	return snap
@@ -102,6 +104,7 @@ func (s *Snapshot) copy() *Snapshot {
 		Number: s.Number,
 		Hash:   s.Hash,
 		ValSet: s.ValSet.Copy(),
+		StakeValSet: s.StakeValSet.Copy(),
 		Votes:  make([]*Vote, len(s.Votes)),
 		Tally:  make(map[common.Address]Tally),
 	}
@@ -171,6 +174,21 @@ func (s *Snapshot) validators() []common.Address {
 		}
 	}
 	return validators
+}
+
+func (s *Snapshot) stakingValidators() []common.Address {
+	stakingValidators := make([]common.Address, 0, s.StakeValSet.Size())
+	for _, stakingValidator := range s.StakeValSet.List() {
+		stakingValidators = append(stakingValidators, stakingValidator.Address())
+	}
+	for i := 0; i < len(stakingValidators); i++ {
+		for j := i + 1; j < len(stakingValidators); j++ {
+			if bytes.Compare(stakingValidators[i][:], stakingValidators[j][:]) > 0 {
+				stakingValidators[i], stakingValidators[j] = stakingValidators[j], stakingValidators[i]
+			}
+		}
+	}
+	return stakingValidators
 }
 
 type snapshotJSON struct {
