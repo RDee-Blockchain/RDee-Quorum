@@ -73,6 +73,7 @@ type core struct {
 	futurePreprepareTimer *time.Timer
 
 	valSet     istanbul.ValidatorSet
+	stakingValSet     istanbul.ValidatorSet
 	validateFn func([]byte, []byte) (common.Address, error)
 
 	backlogs   map[common.Address]*prque.Prque
@@ -184,6 +185,7 @@ func (c *core) startNewRound(round *big.Int) {
 			Round:    new(big.Int),
 		}
 		c.valSet = c.backend.Validators(lastProposal)
+		c.stakingValSet = c.backend.StakingValidators(lastProposal)
 	}
 
 	// New snapshot for new round
@@ -211,7 +213,7 @@ func (c *core) startNewRound(round *big.Int) {
 		c.newRoundChangeTimer()
 	}
 
-	oldLogger.Info("QBFT: start new round", "next.round", newView.Round, "next.seq", newView.Sequence, "next.proposer", c.valSet.GetProposer(), "next.valSet", c.valSet.List(), "next.size", c.valSet.Size(), "next.IsProposer", c.IsProposer())
+	oldLogger.Info("QBFT: start new round", "next.round", newView.Round, "next.seq", newView.Sequence, "next.proposer", c.valSet.GetProposer(), "next.valSet", c.valSet.List(), "next.size", c.valSet.Size(), "next.IsProposer", c.IsProposer(), "next.stakingValSet", c.stakingValSet.List())
 }
 
 // updateRoundState updates round state by checking if locking block is necessary
