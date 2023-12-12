@@ -134,7 +134,6 @@ func (c *core) startNewRound(round *big.Int) {
 		logger = logger.New(
 			"lastProposal.number", lastProposal.Number().Uint64(),
 			"lastProposal.hash", lastProposal.Hash(),
-			"stakingValSet", c.stakingValSet.List(),
 		)
 	}
 
