@@ -64,8 +64,8 @@ func (valSet *defaultSet) Size() int {
 }
 
 func (valSet *defaultSet) List() []istanbul.Validator {
-	//valSet.validatorMu.RLock()
-	//defer valSet.validatorMu.RUnlock()
+	valSet.validatorMu.RLock()
+	defer valSet.validatorMu.RUnlock()
 	return valSet.validators
 }
 
