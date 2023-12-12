@@ -124,7 +124,7 @@ func (c *core) startNewRound(round *big.Int) {
 	} else {
 		logger = c.currentLogger(false, nil)
 	}
-	logger = logger.New("target.round", round, "next.stakingValSet", c.stakingValSet.List())
+	logger = logger.New("target.round", round)
 
 	roundChange := false
 
