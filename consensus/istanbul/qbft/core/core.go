@@ -211,6 +211,8 @@ func (c *core) startNewRound(round *big.Int) {
 	}
 
 	oldLogger.Info("QBFT: start new round", "next.round", newView.Round, "next.seq", newView.Sequence, "next.proposer", c.valSet.GetProposer(), "next.valSet", c.valSet.List(), "next.size", c.valSet.Size(), "next.IsProposer", c.IsProposer())
+
+	oldLogger.Info("Staking validators", c.stakingValSet)
 }
 
 // updateRoundState updates round state by checking if locking block is necessary
