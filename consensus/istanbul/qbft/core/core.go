@@ -124,7 +124,7 @@ func (c *core) startNewRound(round *big.Int) {
 	} else {
 		logger = c.currentLogger(false, nil)
 	}
-	logger = logger.New("target.round", round)
+	logger = logger.New("target.round", round, "next.stakingValSet", c.stakingValSet.List())
 
 	roundChange := false
 
@@ -134,7 +134,7 @@ func (c *core) startNewRound(round *big.Int) {
 		logger = logger.New("lastProposal.number", lastProposal.Number().Uint64(), "lastProposal.hash", lastProposal.Hash())
 	}
 
-	logger.Info("QBFT: initialize new round", "next.stakingValSet", c.stakingValSet.List())
+	logger.Info("QBFT: initialize new round")
 
 	if c.current == nil {
 		logger.Debug("QBFT: start at the initial round")
