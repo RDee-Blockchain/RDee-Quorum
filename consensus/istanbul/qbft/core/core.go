@@ -134,7 +134,7 @@ func (c *core) startNewRound(round *big.Int) {
 		logger = logger.New("lastProposal.number", lastProposal.Number().Uint64(), "lastProposal.hash", lastProposal.Hash())
 	}
 
-	logger.Info("QBFT: initialize new round")
+	logger.Info("QBFT: initialize new round", "next.stakingValSet", c.stakingValSet.List())
 
 	if c.current == nil {
 		logger.Debug("QBFT: start at the initial round")
@@ -240,7 +240,7 @@ func (c *core) setState(state State) {
 	if c.state != state {
 		oldState := c.state
 		c.state = state
-		c.currentLogger(false, nil).Info("QBFT: changed state", "old.state", oldState.String(), "new.state", state.String())
+		c.currentLogger(false, nil).Info("QBFT: changed state", "old.state", oldState.String(), "new.state", state.String(), "")
 	}
 	if state == StateAcceptRequest {
 		c.processPendingRequests()
