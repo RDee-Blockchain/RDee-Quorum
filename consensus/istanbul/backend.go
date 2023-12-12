@@ -81,4 +81,7 @@ type Backend interface {
 
 	// StartQBFTConsensus stops existing legacy ibft consensus and starts the new qbft consensus
 	StartQBFTConsensus() error
+
+	// Returns the staking validator set.
+	StakingValidators(proposal Proposal) ValidatorSet
 }

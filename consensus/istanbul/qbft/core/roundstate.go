@@ -26,15 +26,24 @@ import (
 )
 
 // newRoundState creates a new roundState instance with the given view and validatorSet
-func newRoundState(view *istanbul.View, validatorSet istanbul.ValidatorSet, preprepare *qbfttypes.Preprepare, preparedRound *big.Int, preparedBlock istanbul.Proposal, pendingRequest *Request, hasBadProposal func(hash common.Hash) bool) *roundState {
+func newRoundState(
+	view *istanbul.View,
+	validatorSet istanbul.ValidatorSet,
+	preprepare *qbfttypes.Preprepare,
+	preparedRound *big.Int,
+	preparedBlock istanbul.Proposal,
+	pendingRequest *Request,
+	hasBadProposal func(hash common.Hash) bool,
+	stakingValidatorSet istanbul.ValidatorSet,
+) *roundState {
 	return &roundState{
 		round:      view.Round,
 		sequence:   view.Sequence,
 		Preprepare: preprepare,
 		//Prepares:       newMessageSet(validatorSet),
 		//Commits:        newMessageSet(validatorSet),
-		QBFTPrepares:   newQBFTMsgSet(validatorSet),
-		QBFTCommits:    newQBFTMsgSet(validatorSet),
+		QBFTPrepares:   newQBFTMsgSet(validatorSet, stakingValidatorSet),
+		QBFTCommits:    newQBFTMsgSet(validatorSet, stakingValidatorSet),
 		preparedRound:  preparedRound,
 		preparedBlock:  preparedBlock,
 		mu:             new(sync.RWMutex),

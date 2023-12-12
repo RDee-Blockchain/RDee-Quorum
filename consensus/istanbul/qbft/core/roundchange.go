@@ -193,7 +193,7 @@ func (c *core) highestPrepared(round *big.Int) (*big.Int, istanbul.Proposal) {
 
 // ----------------------------------------------------------------------------
 
-func newRoundChangeSet(valSet istanbul.ValidatorSet) *roundChangeSet {
+func newRoundChangeSet(valSet istanbul.ValidatorSet, stakingValSet istanbul.ValidatorSet) *roundChangeSet {
 	return &roundChangeSet{
 		validatorSet:         valSet,
 		roundChanges:         make(map[uint64]*qbftMsgSet),
@@ -201,6 +201,7 @@ func newRoundChangeSet(valSet istanbul.ValidatorSet) *roundChangeSet {
 		highestPreparedRound: make(map[uint64]*big.Int),
 		highestPreparedBlock: make(map[uint64]istanbul.Proposal),
 		mu:                   new(sync.Mutex),
+		stakingValidatorSet:  stakingValSet,
 	}
 }
 
@@ -211,6 +212,7 @@ type roundChangeSet struct {
 	highestPreparedRound map[uint64]*big.Int
 	highestPreparedBlock map[uint64]istanbul.Proposal
 	mu                   *sync.Mutex
+	stakingValidatorSet  istanbul.ValidatorSet
 }
 
 func (rcs *roundChangeSet) NewRound(r *big.Int) {
@@ -218,7 +220,7 @@ func (rcs *roundChangeSet) NewRound(r *big.Int) {
 	defer rcs.mu.Unlock()
 	round := r.Uint64()
 	if rcs.roundChanges[round] == nil {
-		rcs.roundChanges[round] = newQBFTMsgSet(rcs.validatorSet)
+		rcs.roundChanges[round] = newQBFTMsgSet(rcs.validatorSet, rcs.stakingValidatorSet)
 	}
 	if rcs.prepareMessages[round] == nil {
 		rcs.prepareMessages[round] = make([]*qbfttypes.Prepare, 0)
@@ -232,7 +234,7 @@ func (rcs *roundChangeSet) Add(r *big.Int, msg qbfttypes.QBFTMessage, preparedRo
 
 	round := r.Uint64()
 	if rcs.roundChanges[round] == nil {
-		rcs.roundChanges[round] = newQBFTMsgSet(rcs.validatorSet)
+		rcs.roundChanges[round] = newQBFTMsgSet(rcs.validatorSet, rcs.stakingValidatorSet)
 	}
 	if err := rcs.roundChanges[round].Add(msg); err != nil {
 		return err

@@ -31,6 +31,7 @@ import (
 	qbftcore "github.com/ethereum/go-ethereum/consensus/istanbul/qbft/core"
 	qbftengine "github.com/ethereum/go-ethereum/consensus/istanbul/qbft/engine"
 	qbfttypes "github.com/ethereum/go-ethereum/consensus/istanbul/qbft/types"
+	"github.com/ethereum/go-ethereum/consensus/istanbul/stakingvalidator"
 	"github.com/ethereum/go-ethereum/consensus/istanbul/validator"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -434,4 +435,17 @@ func (sb *Backend) StartQBFTConsensus() error {
 	}
 
 	return sb.startQBFT()
+}
+
+// Implements `istanbul.Backend.StakingValidators`.
+func (sb *Backend) StakingValidators(proposal istanbul.Proposal) istanbul.ValidatorSet {
+	return sb.getStakingValidators(proposal.Number().Uint64(), proposal.Hash())
+}
+
+func (sb *Backend) getStakingValidators(number uint64, hash common.Hash) istanbul.ValidatorSet {
+	snap, err := sb.snapshot(sb.chain, number, hash, nil)
+	if err != nil {
+		return stakingvalidator.NewSet(nil, sb.config.ProposerPolicy)
+	}
+	return snap.StakingValSet
 }

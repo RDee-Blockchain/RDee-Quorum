@@ -268,3 +268,23 @@ func (api *API) IsValidator(blockNum *rpc.BlockNumber) (bool, error) {
 	}
 	return false, nil
 }
+
+// Retrieves the list of authorized staking validators at the specified block.
+func (api *API) GetStakingValidators(number *rpc.BlockNumber) ([]common.Address, error) {
+	// Retrieving the requested block number (or current if none requested).
+	var header *types.Header
+	if number == nil || *number == rpc.LatestBlockNumber {
+		header = api.chain.CurrentHeader()
+	} else {
+		header = api.chain.GetHeaderByNumber(uint64(number.Int64()))
+	}
+	// Ensuring that an actually valid block and returning the staking validators from its snapshot.
+	if header == nil {
+		return nil, istanbulcommon.ErrUnknownBlock
+	}
+	snap, err := api.backend.snapshot(api.chain, header.Number.Uint64(), header.Hash(), nil)
+	if err != nil {
+		return nil, err
+	}
+	return snap.stakingValidators(), nil
+}

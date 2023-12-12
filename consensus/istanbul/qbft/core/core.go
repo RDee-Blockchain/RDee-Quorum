@@ -93,6 +93,8 @@ type core struct {
 
 	newRoundMutex sync.Mutex
 	newRoundTimer *time.Timer
+
+	stakingValSet istanbul.ValidatorSet
 }
 
 func (c *core) currentView() *istanbul.View {
@@ -180,10 +182,11 @@ func (c *core) startNewRound(round *big.Int) {
 			Round:    new(big.Int),
 		}
 		c.valSet = c.backend.Validators(lastProposal)
+		c.stakingValSet = c.backend.StakingValidators(lastProposal)
 	}
 
 	// New snapshot for new round
-	c.updateRoundState(newView, c.valSet, roundChange)
+	c.updateRoundState(newView, c.valSet, roundChange, c.stakingValSet)
 
 	// Calculate new proposer
 	c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
@@ -196,7 +199,7 @@ func (c *core) startNewRound(round *big.Int) {
 	// Update RoundChangeSet by deleting older round messages
 	if round.Uint64() == 0 {
 		c.QBFTPreparedPrepares = nil
-		c.roundChangeSet = newRoundChangeSet(c.valSet)
+		c.roundChangeSet = newRoundChangeSet(c.valSet, c.stakingValSet)
 	} else {
 		// Clear earlier round messages
 		c.roundChangeSet.ClearLowerThan(round)
@@ -211,11 +214,16 @@ func (c *core) startNewRound(round *big.Int) {
 }
 
 // updateRoundState updates round state by checking if locking block is necessary
-func (c *core) updateRoundState(view *istanbul.View, validatorSet istanbul.ValidatorSet, roundChange bool) {
+func (c *core) updateRoundState(
+	view *istanbul.View,
+	validatorSet istanbul.ValidatorSet,
+	roundChange bool,
+	stakingValidatorSet istanbul.ValidatorSet,
+) {
 	if roundChange && c.current != nil {
-		c.current = newRoundState(view, validatorSet, c.current.Preprepare, c.current.preparedRound, c.current.preparedBlock, c.current.pendingRequest, c.backend.HasBadProposal)
+		c.current = newRoundState(view, validatorSet, c.current.Preprepare, c.current.preparedRound, c.current.preparedBlock, c.current.pendingRequest, c.backend.HasBadProposal, stakingValidatorSet)
 	} else {
-		c.current = newRoundState(view, validatorSet, nil, nil, nil, nil, c.backend.HasBadProposal)
+		c.current = newRoundState(view, validatorSet, nil, nil, nil, nil, c.backend.HasBadProposal, stakingValidatorSet)
 	}
 }
 
