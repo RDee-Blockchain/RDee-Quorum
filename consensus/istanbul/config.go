@@ -136,7 +136,6 @@ type Config struct {
 	MiningBeneficiary        *common.Address       `toml:",omitempty"` // Wallet address that benefits at every new block (besu mode)
 	ValidatorContract        common.Address        `toml:",omitempty"`
 	Validators               []common.Address      `toml:",omitempty"`
-	StakingValidators        []common.Address      `toml:",omitempty"`
 	ValidatorSelectionMode   *string               `toml:",omitempty"`
 	Client                   bind.ContractCaller   `toml:",omitempty"`
 	MaxRequestTimeoutSeconds uint64                `toml:",omitempty"`
@@ -265,14 +264,6 @@ func (c Config) GetValidatorsAt(blockNumber *big.Int) []common.Address {
 
 	//Note! empty means we will get the valset from previous block header which contains votes, validators etc
 	return []common.Address{}
-}
-
-func (c Config) GetStakingValidatorsAt(blockNumber *big.Int) []common.Address {
-	if blockNumber.Cmp(big.NewInt(0)) == 0 && len(c.StakingValidators) > 0 {
-		return c.StakingValidators
-	}
-
-	return c.StakingValidators
 }
 
 func (c Config) Get2FPlus1Enabled(blockNumber *big.Int) bool {

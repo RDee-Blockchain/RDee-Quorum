@@ -30,25 +30,27 @@ import (
 )
 
 // Construct a new message set to accumulate messages for given sequence/view number.
-func newQBFTMsgSet(valSet istanbul.ValidatorSet) *qbftMsgSet {
+func newQBFTMsgSet(valSet istanbul.ValidatorSet, stakingValSet istanbul.ValidatorSet) *qbftMsgSet {
 	return &qbftMsgSet{
 		view: &istanbul.View{
 			Round:    new(big.Int),
 			Sequence: new(big.Int),
 		},
-		messagesMu: new(sync.Mutex),
-		messages:   make(map[common.Address]qbfttypes.QBFTMessage),
-		valSet:     valSet,
+		messagesMu:    new(sync.Mutex),
+		messages:      make(map[common.Address]qbfttypes.QBFTMessage),
+		valSet:        valSet,
+		stakingValSet: stakingValSet,
 	}
 }
 
 // ----------------------------------------------------------------------------
 
 type qbftMsgSet struct {
-	view       *istanbul.View
-	valSet     istanbul.ValidatorSet
-	messagesMu *sync.Mutex
-	messages   map[common.Address]qbfttypes.QBFTMessage
+	view          *istanbul.View
+	valSet        istanbul.ValidatorSet
+	messagesMu    *sync.Mutex
+	messages      map[common.Address]qbfttypes.QBFTMessage
+	stakingValSet istanbul.ValidatorSet
 }
 
 // qbftMsgMapAsStruct is a temporary holder struct to convert messages map to a slice when Encoding and Decoding qbftMsgSet

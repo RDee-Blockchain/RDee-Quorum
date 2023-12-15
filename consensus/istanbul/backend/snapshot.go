@@ -22,6 +22,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus/istanbul"
+	"github.com/ethereum/go-ethereum/consensus/istanbul/stakingvalidator"
 	"github.com/ethereum/go-ethereum/consensus/istanbul/validator"
 	"github.com/ethereum/go-ethereum/ethdb"
 )
@@ -50,25 +51,31 @@ type Tally struct {
 type Snapshot struct {
 	Epoch uint64 // The number of blocks after which to checkpoint and reset the pending votes
 
-	Number uint64                   // Block number where the snapshot was created
-	Hash   common.Hash              // Block hash where the snapshot was created
-	Votes  []*Vote                  // List of votes cast in chronological order
-	Tally  map[common.Address]Tally // Current vote tally to avoid recalculating
-	ValSet istanbul.ValidatorSet    // Set of authorized validators at this moment
+	Number        uint64                   // Block number where the snapshot was created
+	Hash          common.Hash              // Block hash where the snapshot was created
+	Votes         []*Vote                  // List of votes cast in chronological order
+	Tally         map[common.Address]Tally // Current vote tally to avoid recalculating
+	ValSet        istanbul.ValidatorSet    // Set of authorized validators at this moment
 	StakingValSet istanbul.ValidatorSet    // Set of authorized staking validators at this moment
 }
 
 // newSnapshot create a new snapshot with the specified startup parameters. This
 // method does not initialize the set of recent validators, so only ever use if for
 // the genesis block.
-func newSnapshot(epoch uint64, number uint64, hash common.Hash, valSet istanbul.ValidatorSet, stakingValSet istanbul.ValidatorSet) *Snapshot {
+func newSnapshot(
+	epoch uint64,
+	number uint64,
+	hash common.Hash,
+	valSet istanbul.ValidatorSet,
+	stakingValSet istanbul.ValidatorSet,
+) *Snapshot {
 	snap := &Snapshot{
-		Epoch:  epoch,
-		Number: number,
-		Hash:   hash,
-		ValSet: valSet,
+		Epoch:         epoch,
+		Number:        number,
+		Hash:          hash,
+		ValSet:        valSet,
 		StakingValSet: stakingValSet,
-		Tally:  make(map[common.Address]Tally),
+		Tally:         make(map[common.Address]Tally),
 	}
 	return snap
 }
@@ -104,7 +111,6 @@ func (s *Snapshot) copy() *Snapshot {
 		Number: s.Number,
 		Hash:   s.Hash,
 		ValSet: s.ValSet.Copy(),
-		StakingValSet: s.StakingValSet.Copy(),
 		Votes:  make([]*Vote, len(s.Votes)),
 		Tally:  make(map[common.Address]Tally),
 	}
@@ -176,21 +182,6 @@ func (s *Snapshot) validators() []common.Address {
 	return validators
 }
 
-func (s *Snapshot) stakingValidators() []common.Address {
-	stakingValidators := make([]common.Address, 0, s.StakingValSet.Size())
-	for _, stakingValidator := range s.StakingValSet.List() {
-		stakingValidators = append(stakingValidators, stakingValidator.Address())
-	}
-	for i := 0; i < len(stakingValidators); i++ {
-		for j := i + 1; j < len(stakingValidators); j++ {
-			if bytes.Compare(stakingValidators[i][:], stakingValidators[j][:]) > 0 {
-				stakingValidators[i], stakingValidators[j] = stakingValidators[j], stakingValidators[i]
-			}
-		}
-	}
-	return stakingValidators
-}
-
 type snapshotJSON struct {
 	Epoch  uint64                   `json:"epoch"`
 	Number uint64                   `json:"number"`
@@ -199,19 +190,21 @@ type snapshotJSON struct {
 	Tally  map[common.Address]Tally `json:"tally"`
 
 	// for validator set
-	Validators []common.Address          `json:"validators"`
-	Policy     istanbul.ProposerPolicyId `json:"policy"`
+	Validators        []common.Address          `json:"validators"`
+	Policy            istanbul.ProposerPolicyId `json:"policy"`
+	StakingValidators []common.Address          `json:"stakingvalidators"`
 }
 
 func (s *Snapshot) toJSONStruct() *snapshotJSON {
 	return &snapshotJSON{
-		Epoch:      s.Epoch,
-		Number:     s.Number,
-		Hash:       s.Hash,
-		Votes:      s.Votes,
-		Tally:      s.Tally,
-		Validators: s.validators(),
-		Policy:     s.ValSet.Policy().Id,
+		Epoch:             s.Epoch,
+		Number:            s.Number,
+		Hash:              s.Hash,
+		Votes:             s.Votes,
+		Tally:             s.Tally,
+		Validators:        s.validators(),
+		Policy:            s.ValSet.Policy().Id,
+		StakingValidators: s.stakingValidators(),
 	}
 }
 
@@ -231,6 +224,7 @@ func (s *Snapshot) UnmarshalJSON(b []byte) error {
 	// Setting the By function to ValidatorSortByStringFunc should be fine, as the validator do not change only the order changes
 	pp := istanbul.NewProposerPolicyByIdAndSortFunc(j.Policy, istanbul.ValidatorSortByString())
 	s.ValSet = validator.NewSet(j.Validators, pp)
+	s.StakingValSet = stakingvalidator.NewSet(j.StakingValidators, pp)
 	return nil
 }
 
@@ -238,4 +232,20 @@ func (s *Snapshot) UnmarshalJSON(b []byte) error {
 func (s *Snapshot) MarshalJSON() ([]byte, error) {
 	j := s.toJSONStruct()
 	return json.Marshal(j)
+}
+
+// Retrieves the list of authorized staking validators in ascending order.
+func (s *Snapshot) stakingValidators() []common.Address {
+	stakingValidators := make([]common.Address, 0, s.StakingValSet.Size())
+	for _, stakingValidator := range s.StakingValSet.List() {
+		stakingValidators = append(stakingValidators, stakingValidator.Address())
+	}
+	for i := 0; i < len(stakingValidators); i++ {
+		for j := i + 1; j < len(stakingValidators); j++ {
+			if bytes.Compare(stakingValidators[i][:], stakingValidators[j][:]) > 0 {
+				stakingValidators[i], stakingValidators[j] = stakingValidators[j], stakingValidators[i]
+			}
+		}
+	}
+	return stakingValidators
 }

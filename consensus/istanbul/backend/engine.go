@@ -28,6 +28,7 @@ import (
 	"github.com/ethereum/go-ethereum/consensus/istanbul"
 	"github.com/ethereum/go-ethereum/consensus/istanbul/backend/contract"
 	istanbulcommon "github.com/ethereum/go-ethereum/consensus/istanbul/common"
+	"github.com/ethereum/go-ethereum/consensus/istanbul/stakingvalidator"
 	"github.com/ethereum/go-ethereum/consensus/istanbul/validator"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -386,21 +387,23 @@ func (sb *Backend) snapshot(chain consensus.ChainHeaderReader, number uint64, ha
 					log.Error("BFT: invalid smart contract in genesis alloc", "err", err)
 					return nil, err
 				}
-
 				stakingValidators, err = validatorContractCaller.GetStakingValidators(&opts)
-				log.Trace("BFT: Initialising snap with contract staking validators", "address", validatorContract, "staking validators", stakingValidators)
+				log.Trace(
+					"BFT: Initializing snap with contract staking validators",
+					"address",
+					validatorContract,
+					"staking validators",
+					stakingValidators,
+				)
 				if err != nil {
-					log.Error("BFT: invalid smart contract in genesis alloc for staking validators", "err", err)
+					log.Error("BFT: invalid smart contract in genesis alloc", "err", err)
 					return nil, err
 				}
 			} else {
 				validatorsFromConfig := sb.config.GetValidatorsAt(big.NewInt(0))
-				stakingValidatorsFromConfig := sb.config.GetStakingValidatorsAt(big.NewInt(0))
 				if len(validatorsFromConfig) > 0 {
 					validators = validatorsFromConfig
-					stakingValidators = stakingValidatorsFromConfig
 					log.Info("BFT: Initialising snap with config validators", "validators", validators)
-					log.Info("BFT: Initialising snap with config staking validators", "staking validators", stakingValidators)
 				} else {
 					var err error
 					validators, err = sb.EngineForBlockNumber(big.NewInt(0)).ExtractGenesisValidators(genesis)
@@ -410,10 +413,20 @@ func (sb *Backend) snapshot(chain consensus.ChainHeaderReader, number uint64, ha
 						return nil, err
 					}
 				}
+				log.Info(
+					"BFT: Initializing snap with empty array of staking validators",
+					"staking validators",
+					stakingValidators,
+				)
 			}
 
-			log.Info("BFT: Staking Validators before snapshot", "staking validators", stakingValidators)
-			snap = newSnapshot(sb.config.GetConfig(new(big.Int).SetUint64(number)).Epoch, 0, genesis.Hash(), validator.NewSet(validators, sb.config.ProposerPolicy), validator.NewSet(stakingValidators, sb.config.ProposerPolicy))
+			snap = newSnapshot(
+				sb.config.GetConfig(new(big.Int).SetUint64(number)).Epoch,
+				0,
+				genesis.Hash(),
+				validator.NewSet(validators, sb.config.ProposerPolicy),
+				stakingvalidator.NewSet(stakingValidators, sb.config.ProposerPolicy),
+			)
 			if err := sb.storeSnap(snap); err != nil {
 				return nil, err
 			}
@@ -476,12 +489,26 @@ func (sb *Backend) snapshot(chain consensus.ChainHeaderReader, number uint64, ha
 		sb.logger.Trace("Fetched validators from smart contract", "validators", validators)
 		valSet := validator.NewSet(validators, sb.config.ProposerPolicy)
 		snap.ValSet = valSet
+
+		stakingValidators, err := validatorContractCaller.GetStakingValidators(&opts)
+
+		if err != nil {
+			log.Error("BFT: invalid validator smart contract", "err", err)
+			return nil, err
+		}
+		sb.logger.Trace("Fetched staking validators from smart contract", "staking validators", stakingValidators)
+		stakingValSet := stakingvalidator.NewSet(stakingValidators, sb.config.ProposerPolicy)
+		snap.StakingValSet = stakingValSet
 	} else if validatorsFromTransitions := sb.config.GetValidatorsAt(targetBlockHeight); len(validatorsFromTransitions) > 0 && sb.config.GetValidatorSelectionMode(targetBlockHeight) == params.BlockHeaderMode {
 		//Note! we only want to set this once at this block height. Subsequent blocks will be propagated with the same
 		// 		validator as they are copied into the block header on the next block. Then normal voting can take place
 		// 		again.
 		valSet := validator.NewSet(validatorsFromTransitions, sb.config.ProposerPolicy)
 		snap.ValSet = valSet
+
+		var emptyStakingValidators []common.Address
+		stakingValSet := stakingvalidator.NewSet(emptyStakingValidators, sb.config.ProposerPolicy)
+		snap.StakingValSet = stakingValSet
 	}
 
 	// If we've generated a new checkpoint snapshot, save to disk

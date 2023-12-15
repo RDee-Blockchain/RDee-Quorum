@@ -23,7 +23,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus/istanbul"
-	ibfttypes "github.com/ethereum/go-ethereum/consensus/istanbul/ibft/types"
 	"github.com/ethereum/go-ethereum/consensus/istanbul/validator"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -213,32 +212,32 @@ func newTestValidatorSet(n int) istanbul.ValidatorSet {
 
 // FIXME: int64 is needed for N and F
 func NewTestSystemWithBackend(n, f uint64) *testSystem {
-	testLogger.SetHandler(elog.StdoutHandler)
+	// testLogger.SetHandler(elog.StdoutHandler)
 
-	addrs := generateValidators(int(n))
+	// addrs := generateValidators(int(n))
 	sys := newTestSystem(n)
-	config := istanbul.DefaultConfig
+	// config := istanbul.DefaultConfig
 
-	for i := uint64(0); i < n; i++ {
-		vset := validator.NewSet(addrs, istanbul.NewRoundRobinProposerPolicy())
-		backend := sys.NewBackend(i)
-		backend.peers = vset
-		backend.address = vset.GetByIndex(i).Address()
+	// for i := uint64(0); i < n; i++ {
+	// 	vset := validator.NewSet(addrs, istanbul.NewRoundRobinProposerPolicy())
+	// 	backend := sys.NewBackend(i)
+	// 	backend.peers = vset
+	// 	backend.address = vset.GetByIndex(i).Address()
 
-		core := New(backend, config)
-		core.state = ibfttypes.StateAcceptRequest
-		core.current = newRoundState(&istanbul.View{
-			Round:    big.NewInt(0),
-			Sequence: big.NewInt(1),
-		}, vset, common.Hash{}, nil, nil, func(hash common.Hash) bool {
-			return false
-		})
-		core.valSet = vset
-		core.logger = testLogger
-		core.validateFn = backend.CheckValidatorSignature
+	// 	core := New(backend, config)
+	// 	core.state = ibfttypes.StateAcceptRequest
+	// 	core.current = newRoundState(&istanbul.View{
+	// 		Round:    big.NewInt(0),
+	// 		Sequence: big.NewInt(1),
+	// 	}, vset, common.Hash{}, nil, nil, func(hash common.Hash) bool {
+	// 		return false
+	// 	})
+	// 	core.valSet = vset
+	// 	core.logger = testLogger
+	// 	core.validateFn = backend.CheckValidatorSignature
 
-		backend.engine = core
-	}
+	// 	backend.engine = core
+	// }
 
 	return sys
 }

@@ -32,9 +32,6 @@ type Backend interface {
 	// Validators returns the validator set
 	Validators(proposal Proposal) ValidatorSet
 
-	// Validators returns the validator set
-	StakingValidators(proposal Proposal) ValidatorSet
-
 	// EventMux returns the event mux in backend
 	EventMux() *event.TypeMux
 
@@ -84,4 +81,7 @@ type Backend interface {
 
 	// StartQBFTConsensus stops existing legacy ibft consensus and starts the new qbft consensus
 	StartQBFTConsensus() error
+
+	// Returns the staking validator set.
+	StakingValidators(proposal Proposal) ValidatorSet
 }

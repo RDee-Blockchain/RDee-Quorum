@@ -73,7 +73,6 @@ type core struct {
 	futurePreprepareTimer *time.Timer
 
 	valSet     istanbul.ValidatorSet
-	stakingValSet     istanbul.ValidatorSet
 	validateFn func([]byte, []byte) (common.Address, error)
 
 	backlogs   map[common.Address]*prque.Prque
@@ -94,6 +93,8 @@ type core struct {
 
 	newRoundMutex sync.Mutex
 	newRoundTimer *time.Timer
+
+	stakingValSet istanbul.ValidatorSet
 }
 
 func (c *core) currentView() *istanbul.View {
@@ -130,17 +131,13 @@ func (c *core) startNewRound(round *big.Int) {
 	// Try to get last proposal
 	lastProposal, lastProposer := c.backend.LastProposal()
 	if lastProposal != nil {
-		logger = logger.New("lastProposal.number", lastProposal.Number().Uint64(), "lastProposal.hash", lastProposal.Hash())
+		logger = logger.New(
+			"lastProposal.number", lastProposal.Number().Uint64(),
+			"lastProposal.hash", lastProposal.Hash(),
+		)
 	}
-	
-	logger.Info("QBFT: initialize new round")
 
-	var stakingValidators []common.Address
-	stakingValidators = c.config.GetStakingValidatorsAt(lastProposal.Number())
-	logger.Info("QBFT: Staking Validators", "stakingValidators", stakingValidators)
-	var stakingValidatorsSet istanbul.ValidatorSet
-	stakingValidatorsSet = c.backend.StakingValidators(lastProposal)
-	logger.Info("QBFT: Staking Validators Set", "stakingValidatorsSet", stakingValidatorsSet)
+	logger.Info("QBFT: initialize new round")
 
 	if c.current == nil {
 		logger.Debug("QBFT: start at the initial round")
@@ -192,7 +189,7 @@ func (c *core) startNewRound(round *big.Int) {
 	}
 
 	// New snapshot for new round
-	c.updateRoundState(newView, c.valSet, roundChange)
+	c.updateRoundState(newView, c.valSet, roundChange, c.stakingValSet)
 
 	// Calculate new proposer
 	c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
@@ -205,7 +202,7 @@ func (c *core) startNewRound(round *big.Int) {
 	// Update RoundChangeSet by deleting older round messages
 	if round.Uint64() == 0 {
 		c.QBFTPreparedPrepares = nil
-		c.roundChangeSet = newRoundChangeSet(c.valSet)
+		c.roundChangeSet = newRoundChangeSet(c.valSet, c.stakingValSet)
 	} else {
 		// Clear earlier round messages
 		c.roundChangeSet.ClearLowerThan(round)
@@ -216,15 +213,29 @@ func (c *core) startNewRound(round *big.Int) {
 		c.newRoundChangeTimer()
 	}
 
-	oldLogger.Info("QBFT: start new round", "next.round", newView.Round, "next.seq", newView.Sequence, "next.proposer", c.valSet.GetProposer(), "next.valSet", c.valSet.List(), "next.size", c.valSet.Size(), "next.IsProposer", c.IsProposer(), "next.stakingValSet", c.stakingValSet.List())
+	oldLogger.Info(
+		"QBFT: start new round",
+		"next.round", newView.Round,
+		"next.seq", newView.Sequence,
+		"next.proposer", c.valSet.GetProposer(),
+		"next.valSet", c.valSet.List(),
+		"next.size", c.valSet.Size(),
+		"next.IsProposer", c.IsProposer(),
+		"next.stakingValSet", c.stakingValSet.List(),
+	)
 }
 
 // updateRoundState updates round state by checking if locking block is necessary
-func (c *core) updateRoundState(view *istanbul.View, validatorSet istanbul.ValidatorSet, roundChange bool) {
+func (c *core) updateRoundState(
+	view *istanbul.View,
+	validatorSet istanbul.ValidatorSet,
+	roundChange bool,
+	stakingValidatorSet istanbul.ValidatorSet,
+) {
 	if roundChange && c.current != nil {
-		c.current = newRoundState(view, validatorSet, c.current.Preprepare, c.current.preparedRound, c.current.preparedBlock, c.current.pendingRequest, c.backend.HasBadProposal)
+		c.current = newRoundState(view, validatorSet, c.current.Preprepare, c.current.preparedRound, c.current.preparedBlock, c.current.pendingRequest, c.backend.HasBadProposal, stakingValidatorSet)
 	} else {
-		c.current = newRoundState(view, validatorSet, nil, nil, nil, nil, c.backend.HasBadProposal)
+		c.current = newRoundState(view, validatorSet, nil, nil, nil, nil, c.backend.HasBadProposal, stakingValidatorSet)
 	}
 }
 
@@ -232,7 +243,7 @@ func (c *core) setState(state State) {
 	if c.state != state {
 		oldState := c.state
 		c.state = state
-		c.currentLogger(false, nil).Info("QBFT: changed state", "old.state", oldState.String(), "new.state", state.String())
+		c.currentLogger(false, nil).Info("QBFT: changed state", "old.state", oldState.String(), "new.state", state.String(), "")
 	}
 	if state == StateAcceptRequest {
 		c.processPendingRequests()
