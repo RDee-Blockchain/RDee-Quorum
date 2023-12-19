@@ -1,0 +1,33 @@
+[network]
+id = 6877
+listenAddr = "127.0.01:30000"
+maxPeers = 25
+
+[permissioning]
+enabled = true
+
+[rpc]
+httpEnabled = true
+httpHost = "127.0.0.1"
+httpPort = 22000
+wsEnabled = true
+wsHost = "127.0.0.1"
+wsPort = 23000
+
+[p2p]
+listenAddr = "127.0.0.1:9000"
+maxPeers = 50
+
+[consensus]
+enabled = true
+mode = "istanbul"
+
+[istanbul]
+epochLength = 30000
+blockPeriod = 5
+epoch = 30000
+policy = "majority"
+blockperiodseconds = 2
+requesttimeout = 10
+skewlimit = 500
+dissentersubmissionperiod = 120
