@@ -507,8 +507,8 @@ func (sb *Backend) snapshot(chain consensus.ChainHeaderReader, number uint64, ha
 		snap.ValSet = valSet
 
 		var emptyStakingValidators []common.Address
-		stakingValSet := stakingvalidator.NewSet(emptyStakingValidators, sb.config.ProposerPolicy)
-		snap.StakingValSet = stakingValSet
+		emptyStakingValSet := stakingvalidator.NewSet(emptyStakingValidators, sb.config.ProposerPolicy)
+		snap.StakingValSet = emptyStakingValSet
 	}
 
 	// If we've generated a new checkpoint snapshot, save to disk
