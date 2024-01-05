@@ -105,11 +105,27 @@ func (c *core) currentView() *istanbul.View {
 }
 
 func (c *core) IsProposer() bool {
-	v := c.valSet
+	return c.isProposer(c.backend.Address())
+}
+
+func (c *core) IsAddrProposer(address common.Address) bool {
+	return c.isProposer(address)
+}
+
+func (c *core) isProposer(address common.Address) bool {
+	var v istanbul.ValidatorSet
+
+	if c.consensusTimestamp.Unix() % 10 == 0 {
+		v = c.stakingValSet
+	} else {
+		v = c.valSet
+	}
+
 	if v == nil {
 		return false
 	}
-	return v.IsProposer(c.backend.Address())
+
+	return v.IsProposer(address)
 }
 
 func (c *core) IsCurrentProposal(blockHash common.Hash) bool {
@@ -192,7 +208,15 @@ func (c *core) startNewRound(round *big.Int) {
 	c.updateRoundState(newView, c.valSet, roundChange, c.stakingValSet)
 
 	// Calculate new proposer
-	c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
+	// Temporary checking when staking validator should propose based on timestamp
+	// In the future it should be based on block number or any other sort of counters
+	if c.consensusTimestamp.Unix() % 10 == 0 {
+		c.stakingValSet.CalcProposer(lastProposer, newView.Round.Uint64())
+	} else {
+		c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
+	}
+
+	//c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
 	c.setState(StateAcceptRequest)
 
 	if c.current != nil && round.Cmp(c.current.Round()) > 0 {

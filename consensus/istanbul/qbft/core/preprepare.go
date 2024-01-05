@@ -108,7 +108,7 @@ func (c *core) handlePreprepareMsg(preprepare *qbfttypes.Preprepare) error {
 	c.logger.Info("QBFT: handle PRE-PREPARE message")
 
 	// Validates PRE-PREPARE message comes from current proposer
-	if !c.valSet.IsProposer(preprepare.Source()) {
+	if !c.IsAddrProposer(preprepare.Source()) {
 		logger.Warn("QBFT: ignore PRE-PREPARE message from non proposer", "proposer", c.valSet.GetProposer().Address())
 		return errNotFromProposer
 	}
