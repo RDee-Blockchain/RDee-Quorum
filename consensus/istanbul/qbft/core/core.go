@@ -186,7 +186,16 @@ func (c *core) startNewRound(round *big.Int) {
 	if c.current == nil {
 		oldLogger = c.logger.New("old.round", -1, "old.seq", 0)
 	} else {
-		oldLogger = c.logger.New("old.round", c.current.Round().Uint64(), "old.sequence", c.current.Sequence().Uint64(), "old.state", c.state.String(), "old.proposer", c.valSet.GetProposer())
+		// Determine old proposer
+		var oldProposer istanbul.Validator
+
+		if c.consensusTimestamp.Unix() % 10 == 0 && c.stakingValSet.Size() != 0 {
+			oldProposer = c.stakingValSet.GetProposer()
+		} else {
+			oldProposer = c.valSet.GetProposer()
+		}
+
+		oldLogger = c.logger.New("old.round", c.current.Round().Uint64(), "old.sequence", c.current.Sequence().Uint64(), "old.state", c.state.String(), "old.proposer", oldProposer)
 	}
 
 	// Create next view
@@ -238,11 +247,20 @@ func (c *core) startNewRound(round *big.Int) {
 		c.newRoundChangeTimer()
 	}
 
+	// Determine new proposer
+	var nextProposer istanbul.Validator
+
+	if c.consensusTimestamp.Unix() % 10 == 0 && c.stakingValSet.Size() != 0 {
+		nextProposer = c.stakingValSet.GetProposer()
+	} else {
+		nextProposer = c.valSet.GetProposer()
+	}
+
 	oldLogger.Info(
 		"QBFT: start new round",
 		"next.round", newView.Round,
 		"next.seq", newView.Sequence,
-		"next.proposer", c.valSet.GetProposer(),
+		"next.proposer",  nextProposer,
 		"next.valSet", c.valSet.List(),
 		"next.size", c.valSet.Size(),
 		"next.IsProposer", c.IsProposer(),
