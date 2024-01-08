@@ -19,6 +19,7 @@ package core
 import (
 	"math"
 	"math/big"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -218,9 +219,9 @@ func (c *core) startNewRound(round *big.Int) {
 	c.updateRoundState(newView, c.valSet, roundChange, c.stakingValSet)
 
 	// Calculate new proposer
-	// Temporary checking when staking validator should propose based on timestamp
+	// Temporary determining based on the library math/rand
 	// In the future it should be based on block number or any other sort of counters
-	if c.consensusTimestamp.Unix() % 10 == 0 && c.stakingValSet.Size() != 0 {
+	if rand.Intn(100) < 10 && c.stakingValSet.Size() != 0 {
 		c.stakingValSet.CalcProposer(lastProposer, newView.Round.Uint64())
 	} else {
 		c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
