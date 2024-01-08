@@ -19,7 +19,6 @@ package core
 import (
 	"math"
 	"math/big"
-	"math/rand"
 	"sync"
 	"time"
 
@@ -190,7 +189,7 @@ func (c *core) startNewRound(round *big.Int) {
 		// Determine old proposer
 		var oldProposer istanbul.Validator
 
-		if c.consensusTimestamp.Unix() % 10 == 0 && c.stakingValSet.Size() != 0 {
+		if c.isStakingValTurn(c.current.Sequence().Uint64()) {
 			oldProposer = c.stakingValSet.GetProposer()
 		} else {
 			oldProposer = c.valSet.GetProposer()
@@ -218,10 +217,8 @@ func (c *core) startNewRound(round *big.Int) {
 	// New snapshot for new round
 	c.updateRoundState(newView, c.valSet, roundChange, c.stakingValSet)
 
-	// Calculate new proposer
-	// Temporary determining based on the library math/rand
-	// In the future it should be based on block number or any other sort of counters
-	if rand.Intn(100) < 10 && c.stakingValSet.Size() != 0 {
+	// Calculate new proposer based on the sequence. Every tenth sequence, the staking validator should propose a block
+	if c.isStakingValTurn(newView.Sequence.Uint64()) {
 		c.stakingValSet.CalcProposer(lastProposer, newView.Round.Uint64())
 	} else {
 		c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
@@ -251,7 +248,7 @@ func (c *core) startNewRound(round *big.Int) {
 	// Determine new proposer
 	var nextProposer istanbul.Validator
 
-	if c.consensusTimestamp.Unix() % 10 == 0 && c.stakingValSet.Size() != 0 {
+	if c.isStakingValTurn(newView.Sequence.Uint64()) {
 		nextProposer = c.stakingValSet.GetProposer()
 	} else {
 		nextProposer = c.valSet.GetProposer()
@@ -357,4 +354,12 @@ func (c *core) QuorumSize() int {
 func PrepareCommittedSeal(header *types.Header, round uint32) []byte {
 	h := types.CopyHeader(header)
 	return h.QBFTHashWithRoundNumber(round).Bytes()
+}
+
+// Returns true if it is a staking validator's turn to propose block.
+// Determines the turn based on the provided sequence
+// Note: Staking validator is chosen every tenth block unless staking validator set is empty
+func (c *core) isStakingValTurn(seq uint64) bool {
+	//return (new(big.Int).Add(seq, common.Big1).Mod(big.NewInt(10)).Cmp(common.Big0) == 0 && c.stakingValSet.Size() != 0)
+	return (seq + 1) % 10 == 0 && c.stakingValSet.Size() != 0
 }
