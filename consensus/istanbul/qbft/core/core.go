@@ -115,7 +115,7 @@ func (c *core) IsAddrProposer(address common.Address) bool {
 func (c *core) isProposer(address common.Address) bool {
 	var v istanbul.ValidatorSet
 
-	if c.consensusTimestamp.Unix() % 10 == 0 {
+	if c.consensusTimestamp.Unix() % 10 == 0 && c.stakingValSet.Size() != 0 {
 		v = c.stakingValSet
 	} else {
 		v = c.valSet
@@ -210,7 +210,7 @@ func (c *core) startNewRound(round *big.Int) {
 	// Calculate new proposer
 	// Temporary checking when staking validator should propose based on timestamp
 	// In the future it should be based on block number or any other sort of counters
-	if c.consensusTimestamp.Unix() % 10 == 0 {
+	if c.consensusTimestamp.Unix() % 10 == 0 && c.stakingValSet.Size() != 0 {
 		c.stakingValSet.CalcProposer(lastProposer, newView.Round.Uint64())
 	} else {
 		c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
