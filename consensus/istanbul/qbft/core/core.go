@@ -113,19 +113,20 @@ func (c *core) IsAddrProposer(address common.Address) bool {
 }
 
 func (c *core) isProposer(address common.Address) bool {
-	var v istanbul.ValidatorSet
+	v := c.valSet
+	sv := c.stakingValSet
 
-	if c.consensusTimestamp.Unix() % 10 == 0 && c.stakingValSet.Size() != 0 {
-		v = c.stakingValSet
-	} else {
-		v = c.valSet
-	}
+	// if c.consensusTimestamp.Unix() % 10 == 0 && c.stakingValSet.Size() != 0 {
+	// 	v = c.stakingValSet
+	// } else {
+	// 	v = c.valSet
+	// }
 
-	if v == nil {
-		return false
-	}
+	// if v == nil {
+	// 	return false
+	// }
 
-	return v.IsProposer(address)
+	return v.IsProposer(address) || sv.IsProposer(address)
 }
 
 func (c *core) IsCurrentProposal(blockHash common.Hash) bool {
