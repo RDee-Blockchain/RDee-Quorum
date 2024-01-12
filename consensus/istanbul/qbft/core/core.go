@@ -190,11 +190,13 @@ func (c *core) startNewRound(round *big.Int) {
 		var oldProposer istanbul.Validator
 
 		if c.isStakingValTurn(c.current.Sequence().Uint64()) {
-			oldProposer = c.stakingValSet.GetProposer()
-		} else {
-			oldProposer = c.valSet.GetProposer()
+			//oldProposer = c.stakingValSet.GetProposer()
+			stProposer := c.stakingValSet.GetProposer().Address()
+			c.valSet.RemoveValidator(stProposer)
 		}
-
+			
+		oldProposer = c.valSet.GetProposer()
+		
 		oldLogger = c.logger.New("old.round", c.current.Round().Uint64(), "old.sequence", c.current.Sequence().Uint64(), "old.state", c.state.String(), "old.proposer", oldProposer)
 	}
 
@@ -220,10 +222,14 @@ func (c *core) startNewRound(round *big.Int) {
 	// Calculate new proposer based on the sequence. Every tenth sequence, the staking validator should propose a block
 	if c.isStakingValTurn(newView.Sequence.Uint64()) {
 		c.stakingValSet.CalcProposer(lastProposer, newView.Round.Uint64())
-	} else {
-		c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
-	}
 
+		stProposer := c.stakingValSet.GetProposer().Address()
+		c.valSet.AddValidator(stProposer)
+		//c.valSet.SetStakingProposer(stProposer)
+	} 
+		
+	c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
+	
 	//c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
 	c.setState(StateAcceptRequest)
 
@@ -248,11 +254,11 @@ func (c *core) startNewRound(round *big.Int) {
 	// Determine new proposer
 	var nextProposer istanbul.Validator
 
-	if c.isStakingValTurn(newView.Sequence.Uint64()) {
-		nextProposer = c.stakingValSet.GetProposer()
-	} else {
-		nextProposer = c.valSet.GetProposer()
-	}
+	// if c.isStakingValTurn(newView.Sequence.Uint64()) {
+	// 	nextProposer = c.stakingValSet.GetProposer()
+	// } else {
+	nextProposer = c.valSet.GetProposer()
+	//}
 
 	oldLogger.Info(
 		"QBFT: start new round",
