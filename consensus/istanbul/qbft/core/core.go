@@ -114,7 +114,7 @@ func (c *core) IsAddrProposer(address common.Address) bool {
 
 func (c *core) isProposer(address common.Address) bool {
 	v := c.valSet
-	sv := c.stakingValSet
+	//sv := c.stakingValSet
 
 	// if c.consensusTimestamp.Unix() % 10 == 0 && c.stakingValSet.Size() != 0 {
 	// 	v = c.stakingValSet
@@ -126,7 +126,7 @@ func (c *core) isProposer(address common.Address) bool {
 	// 	return false
 	// }
 
-	return v.IsProposer(address) || sv.IsProposer(address)
+	return v.IsProposer(address)
 }
 
 func (c *core) IsCurrentProposal(blockHash common.Hash) bool {
