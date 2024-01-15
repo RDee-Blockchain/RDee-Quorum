@@ -189,11 +189,11 @@ func (c *core) startNewRound(round *big.Int) {
 		// Determine old proposer
 		var oldProposer istanbul.Validator
 
-		if c.isStakingValTurn(c.current.Sequence().Uint64()) {
-			//oldProposer = c.stakingValSet.GetProposer()
-			stProposer := c.stakingValSet.GetProposer().Address()
-			c.valSet.RemoveValidator(stProposer)
-		}
+		// if c.isStakingValTurn(c.current.Sequence().Uint64()) {
+		// 	//oldProposer = c.stakingValSet.GetProposer()
+		// 	stProposer := c.stakingValSet.GetProposer().Address()
+		// 	c.valSet.RemoveValidator(stProposer)
+		// }
 			
 		oldProposer = c.valSet.GetProposer()
 		
@@ -220,13 +220,13 @@ func (c *core) startNewRound(round *big.Int) {
 	c.updateRoundState(newView, c.valSet, roundChange, c.stakingValSet)
 
 	// Calculate new proposer based on the sequence. Every tenth sequence, the staking validator should propose a block
-	if c.isStakingValTurn(newView.Sequence.Uint64()) {
-		c.stakingValSet.CalcProposer(lastProposer, newView.Round.Uint64())
+	// if c.isStakingValTurn(newView.Sequence.Uint64()) {
+	// 	c.stakingValSet.CalcProposer(lastProposer, newView.Round.Uint64())
 
-		stProposer := c.stakingValSet.GetProposer().Address()
-		c.valSet.AddValidator(stProposer)
-		//c.valSet.SetStakingProposer(stProposer)
-	} 
+	// 	stProposer := c.stakingValSet.GetProposer().Address()
+	// 	c.valSet.AddValidator(stProposer)
+	// 	//c.valSet.SetStakingProposer(stProposer)
+	// } 
 		
 	c.valSet.CalcProposer(lastProposer, newView.Round.Uint64())
 	
